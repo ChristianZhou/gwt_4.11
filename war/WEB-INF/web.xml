@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+         version="4.0">
+
+    <servlet>
+        <servlet-name>bankServiceRemote</servlet-name>
+        <servlet-class>com.mySampleApplication.server.BankServiceRemoteImpl</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>bankServiceRemote</servlet-name>
+        <url-pattern>/MySampleApplication/bankServiceRemote</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>customerServiceRemote</servlet-name>
+        <servlet-class>com.mySampleApplication.server.CustomerServiceRemoteImpl</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>customerServiceRemote</servlet-name>
+        <url-pattern>/MySampleApplication/customerServiceRemote</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>calendar</servlet-name>
+        <servlet-class>com.mySampleApplication.server.SchoolCalendarServiceImpl</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>calendar</servlet-name>
+        <url-pattern>/MySampleApplication/calendar</url-pattern>
+    </servlet-mapping>
+
+</web-app>
