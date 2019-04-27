@@ -2,8 +2,6 @@
 
     <!-- Inherit the core Web Toolkit stuff.                  -->
     <inherits name='com.google.gwt.user.User'/>
-    <inherits name="com.google.gwt.precompress.Precompress"/>
-    <inherits name="com.google.gwt.resources.Resources" />
     <inherits name="com.extjs.gxt.ui.GXT"/>
 
 
@@ -11,8 +9,12 @@
     <entry-point class='com.mySampleApplication.client.MySampleApplication'/>
 
     <!-- Specify the app servlets.-->
-    <servlet path='/bankServiceRemote' class='com.mySampleApplication.server.BankServiceRemoteImpl'/>
-    <servlet path='/customerServiceRemote' class='com.mySampleApplication.server.CustomerServiceRemoteImpl'/>
-    <servlet path='/calendar' class='com.mySampleApplication.server.SchoolCalendarServiceImpl'/>
+    <servlet path='/customerServiceRemote' class='com.mySampleApplication.server.services.CustomerServiceRemoteImpl'/>
+    <servlet path='/customerTypeService' class='com.mySampleApplication.server.services.CustomerTypeServiceImpl'/>
+
+    <source path="client"/>
+    <source path="shared"/>
 
 </module>
+
+

@@ -1,6 +1,6 @@
 package com.mySampleApplication.client.utils;
 
-import com.mySampleApplication.client.data.CustomerData;
+import com.mySampleApplication.shared.model.CustomerData;
 import com.zgx.bootdemo.entity.Customer;
 import net.sf.cglib.beans.BeanCopier;
 import net.sf.cglib.core.Converter;

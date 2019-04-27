@@ -4,31 +4,24 @@
          xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
          version="4.0">
 
-    <servlet>
-        <servlet-name>bankServiceRemote</servlet-name>
-        <servlet-class>com.mySampleApplication.server.BankServiceRemoteImpl</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>bankServiceRemote</servlet-name>
-        <url-pattern>/MySampleApplication/bankServiceRemote</url-pattern>
-    </servlet-mapping>
+
 
     <servlet>
         <servlet-name>customerServiceRemote</servlet-name>
-        <servlet-class>com.mySampleApplication.server.CustomerServiceRemoteImpl</servlet-class>
+        <servlet-class>com.mySampleApplication.server.services.CustomerServiceRemoteImpl</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>customerServiceRemote</servlet-name>
         <url-pattern>/MySampleApplication/customerServiceRemote</url-pattern>
     </servlet-mapping>
-
     <servlet>
-        <servlet-name>calendar</servlet-name>
-        <servlet-class>com.mySampleApplication.server.SchoolCalendarServiceImpl</servlet-class>
+        <servlet-name>customerTypeService</servlet-name>
+        <servlet-class>com.mySampleApplication.server.services.CustomerTypeServiceImpl</servlet-class>
     </servlet>
     <servlet-mapping>
-        <servlet-name>calendar</servlet-name>
-        <url-pattern>/MySampleApplication/calendar</url-pattern>
+        <servlet-name>customerTypeService</servlet-name>
+        <url-pattern>/MySampleApplication/customerTypeService</url-pattern>
     </servlet-mapping>
+
 
 </web-app>
