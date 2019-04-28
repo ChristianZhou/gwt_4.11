@@ -16,6 +16,7 @@ import com.extjs.gxt.ui.client.widget.button.ToggleButton;
 import com.extjs.gxt.ui.client.widget.grid.ColumnConfig;
 import com.extjs.gxt.ui.client.widget.layout.FitLayout;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.mySampleApplication.client.grids.CustomerGrid;
 import com.mySampleApplication.client.services.CustomerServiceRemoteAsync;
 import com.mySampleApplication.client.window.CustomerWindow;
 import com.mySampleApplication.shared.model.CustomerData;
@@ -43,7 +44,7 @@ public class MainPanel extends ContentPanel
 
         setLayout(new FitLayout());
 
-//        add(new CustomerGrid());
+        add(new CustomerGrid());
 //        add(new CustomerTypeList());
     }
 

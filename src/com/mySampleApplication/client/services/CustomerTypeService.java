@@ -3,7 +3,7 @@ package com.mySampleApplication.client.services;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
-import com.mySampleApplication.shared.model.CustomerType;
+import com.mySampleApplication.shared.model.CustomerTypeData;
 
 import java.util.List;
 
@@ -16,7 +16,7 @@ import java.util.List;
 public interface CustomerTypeService extends RemoteService {
     String url ="http://localhost:18888/customerTypeService" ;
 
-    List<CustomerType> list();
+    List<CustomerTypeData> list();
 
     class App {
         private static CustomerTypeServiceAsync customerTypeServiceAsync = GWT.create(CustomerTypeService.class);

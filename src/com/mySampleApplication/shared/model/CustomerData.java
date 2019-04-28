@@ -12,7 +12,6 @@ public class CustomerData implements Serializable {
 
   private Long custCode;//主键、客户代码
   private String setSettlementMethodCode;//结算方式
-  private String cusCustTypeCode;//客户类型
   private String custName;//客户名称
   private String mnemonicCode;//助记码
   private String tel;//电话
@@ -29,7 +28,14 @@ public class CustomerData implements Serializable {
 
   private BankData bankData;//银行
 
-  public CustomerData() {
+  private CustomerTypeData customerTypeData;//客户类型
+
+  public CustomerTypeData getCustomerTypeData() {
+    return customerTypeData;
+  }
+
+  public void setCustomerTypeData(CustomerTypeData customerTypeData) {
+    this.customerTypeData = customerTypeData;
   }
 
   public Long getCustCode() {
@@ -55,16 +61,6 @@ public class CustomerData implements Serializable {
   public void setSetSettlementMethodCode(String setSettlementMethodCode) {
     this.setSettlementMethodCode = setSettlementMethodCode;
   }
-
-
-  public String getCusCustTypeCode() {
-    return cusCustTypeCode;
-  }
-
-  public void setCusCustTypeCode(String cusCustTypeCode) {
-    this.cusCustTypeCode = cusCustTypeCode;
-  }
-
 
   public String getCustName() {
     return custName;

@@ -1,6 +1,5 @@
 package com.mySampleApplication.shared.model;
 
-import com.zgx.bootdemo.entity.Page;
 
 import java.io.Serializable;
 
@@ -11,7 +10,7 @@ import java.io.Serializable;
  */
 public class KeywordPageData implements Serializable {
     private String keyword;//关键字
-    private Page page;//分页实体类
+    private PageData pageData;//分页实体类
 
     public String getKeyword() {
         return keyword;
@@ -21,11 +20,11 @@ public class KeywordPageData implements Serializable {
         this.keyword = keyword;
     }
 
-    public Page getPage() {
-        return page;
+    public PageData getPageData() {
+        return pageData;
     }
 
-    public void setPage(Page page) {
-        this.page = page;
+    public void setPageData(PageData pageData) {
+        this.pageData = pageData;
     }
 }

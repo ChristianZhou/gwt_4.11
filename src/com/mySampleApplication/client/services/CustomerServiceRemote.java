@@ -19,7 +19,9 @@ public interface CustomerServiceRemote extends RemoteService {
     CustomerData read(Long var1) throws Exception;
 
     PageData<CustomerData> listPage(KeywordPageData keywordPageData);
-    List<CustomerModel> list(KeywordPageData keywordPageData);
+    List<CustomerData> list(KeywordPageData keywordPageData);
+
+    List<CustomerData> listByType(Long custTypeCode);
 
 
 
@@ -29,6 +31,10 @@ public interface CustomerServiceRemote extends RemoteService {
     void delete(Long var1) throws Exception;
 
     void update(CustomerData var1);
+
+
+    //    void list(KeywordPageData keywordPageData, AsyncCallback<List<CustomerModel>> async);
+    //
 
     class App {
         private static CustomerServiceRemoteAsync customerServiceRemoteAsync = GWT.create(CustomerServiceRemote.class);

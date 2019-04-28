@@ -25,5 +25,4 @@ public class BankData implements Serializable {
     public void setBankName(String bankName) {
         this.bankName = bankName;
     }
-
 }

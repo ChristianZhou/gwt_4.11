@@ -2,8 +2,7 @@ package com.mySampleApplication.server.services;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.mySampleApplication.client.services.CustomerTypeService;
-import com.mySampleApplication.client.utils.CglibBeanCopierUtil;
-import com.mySampleApplication.shared.model.CustomerType;
+import com.mySampleApplication.shared.model.CustomerTypeData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,13 +17,13 @@ public class CustomerTypeServiceImpl extends RemoteServiceServlet implements Cus
     private com.zgx.bootdemo.service.CustomerTypeService serivce = HttpInvokerProxyUtil.getInstance().doRefer(com.zgx.bootdemo.service.CustomerTypeService.class, this.url);
 
     @Override
-    public List<CustomerType> list() {
+    public List<CustomerTypeData> list() {
         List<com.zgx.bootdemo.entity.CustomerType> list = serivce.list();
-        List<CustomerType> list1 = new ArrayList<>();
+        List<CustomerTypeData> list1 = new ArrayList<>();
         for (com.zgx.bootdemo.entity.CustomerType customerType : list) {
-            CustomerType customerType1 = new CustomerType();
-            CglibBeanCopierUtil.copyProperties(customerType, customerType1);
-            list1.add(customerType1);
+            CustomerTypeData customerTypeData1 = new CustomerTypeData();
+            CglibBeanCopierUtil.copyProperties(customerType, customerTypeData1);
+            list1.add(customerTypeData1);
         }
         return list1;
     }

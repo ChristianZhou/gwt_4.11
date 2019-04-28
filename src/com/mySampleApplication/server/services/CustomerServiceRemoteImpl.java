@@ -2,15 +2,9 @@ package com.mySampleApplication.server.services;
 
 import com.google.gwt.dev.util.collect.HashMap;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
-import com.mySampleApplication.client.model.CustomerModel;
 import com.mySampleApplication.client.services.CustomerServiceRemote;
-import com.mySampleApplication.client.utils.CglibBeanCopierUtil;
-import com.mySampleApplication.shared.model.CustomerData;
-import com.mySampleApplication.shared.model.KeywordPageData;
-import com.mySampleApplication.shared.model.PageData;
-import com.zgx.bootdemo.entity.Customer;
-import com.zgx.bootdemo.entity.KeywordPage;
-import com.zgx.bootdemo.entity.Page;
+import com.mySampleApplication.shared.model.*;
+import com.zgx.bootdemo.entity.*;
 import com.zgx.bootdemo.service.CustomerSerivce;
 import org.jdom.Attribute;
 import org.jdom.Document;
@@ -53,25 +47,44 @@ public class CustomerServiceRemoteImpl extends RemoteServiceServlet implements C
         return pageData;
     }
     @Override
-    public List<CustomerModel> list(KeywordPageData keywordPageData) {
+    public List<CustomerData> list(KeywordPageData keywordPageData) {
         String keyword = keywordPageData.getKeyword()==null?"":keywordPageData.getKeyword();
-
+        PageData pageData = keywordPageData.getPageData()==null?new PageData():keywordPageData.getPageData();
         Page pageCopy = new Page();
+//        PageData pageData1 = new PageData();
+        CglibBeanCopierUtil.copyPage(pageData,pageCopy);
 
         KeywordPage keywordPage = new KeywordPage();
         keywordPage.setKeyword(keyword);
         keywordPage.setPage(pageCopy);
 
         Page<Customer> page1 = customerService.listPage(keywordPage);
-        PageData<CustomerData> pageData = new PageData<>();
+
         CglibBeanCopierUtil.copyPageData(page1, pageData);
 
         List<CustomerData> list = pageData.getList();
-        List<CustomerModel> list1 = new ArrayList<>();
-        for (CustomerData customerData : list) {
-            CustomerModel customerModel = new CustomerModel();
-            CglibBeanCopierUtil.copyProperties(customerData,customerModel);
-            list1.add(customerModel);
+        return list;
+    }
+
+    @Override
+    public List<CustomerData> listByType(Long custTypeCode) {
+        List<Customer> list = customerService.listByType(custTypeCode);
+        List<CustomerData> list1 = new ArrayList<>();
+        for (Customer customer : list) {
+            CustomerData customerData = new CustomerData();
+            CglibBeanCopierUtil.copyProperties(customer,customerData);
+
+            CustomerTypeData customerType = new CustomerTypeData();
+            CglibBeanCopierUtil.copyProperties(customer.getCustomerType(), customerType);
+            customerData.setCustomerTypeData(customerType);
+
+            BankData bankData = new BankData();
+            Bank bank = customer.getBank();
+            if(bank==null)bank = new Bank();
+            CglibBeanCopierUtil.copyProperties(bank, bankData);
+            customerData.setBankData(bankData);
+
+            list1.add(customerData);
         }
         return list1;
     }

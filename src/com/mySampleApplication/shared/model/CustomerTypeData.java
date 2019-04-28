@@ -3,20 +3,18 @@ package com.mySampleApplication.shared.model;
 
 import java.io.Serializable;
 
-public class CustomerType implements Serializable {
+public class CustomerTypeData implements Serializable {
 
-  private String custTypeCode;
+  private Long custTypeCode;
   private String custTypeName;
 
-
-  public String getCustTypeCode() {
+  public Long getCustTypeCode() {
     return custTypeCode;
   }
 
-  public void setCustTypeCode(String custTypeCode) {
+  public void setCustTypeCode(Long custTypeCode) {
     this.custTypeCode = custTypeCode;
   }
-
 
   public String getCustTypeName() {
     return custTypeName;

@@ -1,6 +1,8 @@
-package com.mySampleApplication.client.utils;
+package com.mySampleApplication.server.services;
 
+import com.mySampleApplication.shared.model.BankData;
 import com.mySampleApplication.shared.model.CustomerData;
+import com.mySampleApplication.shared.model.CustomerTypeData;
 import com.zgx.bootdemo.entity.Customer;
 import net.sf.cglib.beans.BeanCopier;
 import net.sf.cglib.core.Converter;
@@ -47,9 +49,39 @@ public class CglibBeanCopierUtil {
                     List<CustomerData> list = new ArrayList<>();
                     for (Object o2 : (List) value) {
                         if(o2 instanceof Customer){
+                            Customer customer = new Customer();
+                            CglibBeanCopierUtil.copyProperties(o2,customer);
                             CustomerData customerData = new CustomerData();
-                            CglibBeanCopierUtil.copyProperties(o2, customerData);
+                            CglibBeanCopierUtil.copyProperties(customer, customerData);
                             list.add((customerData));
+                        }
+                    }
+                    return list;
+                }else {
+                    return value;
+                }
+            }
+        });
+    }
+    public static void copyPage(Object source,Object target){
+        String beanKey = generateKey(source.getClass(),target.getClass());
+        BeanCopier copier;
+        if (!beanCopierMap.containsKey(beanKey)) {
+            copier = BeanCopier.create(source.getClass(), target.getClass(), true);
+            beanCopierMap.put(beanKey, copier);
+        }else {
+            copier = beanCopierMap.get(beanKey);
+        }
+        copier.copy(source, target, new Converter() {
+            @Override
+            public Object convert(Object value, Class target, Object context) {
+                if(value instanceof List){
+                    List<Customer> list = new ArrayList<>();
+                    for (Object o2 : (List) value) {
+                        if(o2 instanceof CustomerData){
+                            Customer customer = new Customer();
+                            CglibBeanCopierUtil.copyProperties(o2, customer);
+                            list.add((customer));
                         }
                     }
                     return list;

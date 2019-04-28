@@ -1,7 +1,6 @@
 package com.mySampleApplication.client.services;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.mySampleApplication.client.model.CustomerModel;
 import com.mySampleApplication.shared.model.CustomerData;
 import com.mySampleApplication.shared.model.KeywordPageData;
 import com.mySampleApplication.shared.model.PageData;
@@ -24,10 +23,10 @@ public interface CustomerServiceRemoteAsync {
     void saveCustomer(com.mySampleApplication.shared.model.CustomerData customerData, AsyncCallback<Void> async);
 
 
-    void list(KeywordPageData keywordPageData, AsyncCallback<List<CustomerModel>> async);
-
+    void list(KeywordPageData keywordPageData, AsyncCallback<List<CustomerData>> async);
+//
     void listPage(KeywordPageData keywordPageData, AsyncCallback<PageData<CustomerData>> async);
 
 
-//    void listPage(KeywordPageData keywordPageData, AsyncCallback<PageData<CustomerData>> async);
+    void listByType(Long custTypeCode, AsyncCallback<List<CustomerData>> async);
 }
