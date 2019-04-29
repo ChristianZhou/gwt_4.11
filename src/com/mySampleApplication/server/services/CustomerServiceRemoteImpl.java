@@ -25,6 +25,7 @@ public class CustomerServiceRemoteImpl extends RemoteServiceServlet implements C
     private CustomerSerivce customerService = HttpInvokerProxyUtil.getInstance().doRefer(CustomerSerivce.class, url);
 
     private Map<String, CustomerData> customerDataMap = new HashMap<String, CustomerData>();
+
     @Override
     public CustomerData read(Long var1) throws Exception {
         Customer read = customerService.read(var1);
@@ -35,7 +36,7 @@ public class CustomerServiceRemoteImpl extends RemoteServiceServlet implements C
 
     @Override
     public PageData<CustomerData> listPage(KeywordPageData keywordPageData) {
-        String keyword = keywordPageData.getKeyword()==null?"":keywordPageData.getKeyword();
+        String keyword = keywordPageData.getKeyword() == null ? "" : keywordPageData.getKeyword();
 
         Page pageCopy = new Page();
 
@@ -49,13 +50,14 @@ public class CustomerServiceRemoteImpl extends RemoteServiceServlet implements C
 
         return pageData;
     }
+
     @Override
     public List<CustomerData> list(KeywordPageData keywordPageData) {
-        String keyword = keywordPageData.getKeyword()==null?"":keywordPageData.getKeyword();
-        PageData pageData = keywordPageData.getPageData()==null?new PageData():keywordPageData.getPageData();
+        String keyword = keywordPageData.getKeyword() == null ? "" : keywordPageData.getKeyword();
+        PageData pageData = keywordPageData.getPageData() == null ? new PageData() : keywordPageData.getPageData();
         Page pageCopy = new Page();
 //        PageData pageData1 = new PageData();
-        CglibBeanCopierUtil.copyPage(pageData,pageCopy);
+        CglibBeanCopierUtil.copyPage(pageData, pageCopy);
 
         KeywordPage keywordPage = new KeywordPage();
         keywordPage.setKeyword(keyword);
@@ -75,7 +77,7 @@ public class CustomerServiceRemoteImpl extends RemoteServiceServlet implements C
         List<CustomerData> list1 = new ArrayList<>();
         for (Customer customer : list) {
             CustomerData customerData = new CustomerData();
-            CglibBeanCopierUtil.copyProperties(customer,customerData);
+            CglibBeanCopierUtil.copyProperties(customer, customerData);
 
             CustomerTypeData customerType = new CustomerTypeData();
             CglibBeanCopierUtil.copyProperties(customer.getCustomerType(), customerType);
@@ -83,7 +85,7 @@ public class CustomerServiceRemoteImpl extends RemoteServiceServlet implements C
 
             BankData bankData = new BankData();
             Bank bank = customer.getBank();
-            if(bank==null)bank = new Bank();
+            if (bank == null) bank = new Bank();
             CglibBeanCopierUtil.copyProperties(bank, bankData);
             customerData.setBankData(bankData);
 
@@ -95,20 +97,20 @@ public class CustomerServiceRemoteImpl extends RemoteServiceServlet implements C
 
     @Override
     public List<CustomerData> listByTypeAndKeyword(Long custTypeCode, String keyword) {
-        List<Customer> list = customerService.listByTypeAndKeyword(custTypeCode,keyword);
+        List<Customer> list = customerService.listByTypeAndKeyword(custTypeCode, keyword);
         List<CustomerData> list1 = new ArrayList<>();
         for (Customer customer : list) {
             CustomerData customerData = new CustomerData();
-            CglibBeanCopierUtil.copyProperties(customer,customerData);
+            CglibBeanCopierUtil.copyProperties(customer, customerData);
 
             CustomerTypeData customerTypeData = new CustomerTypeData();
             CustomerType customerType = customer.getCustomerType();
-            if(customerType!=null)
-            CglibBeanCopierUtil.copyProperties(customerType, customerTypeData);
+            if (customerType != null)
+                CglibBeanCopierUtil.copyProperties(customerType, customerTypeData);
             customerData.setCustomerTypeData(customerTypeData);
             BankData bankData = new BankData();
             Bank bank = customer.getBank();
-            if(bank==null)bank = new Bank();
+            if (bank == null) bank = new Bank();
             CglibBeanCopierUtil.copyProperties(bank, bankData);
             customerData.setBankData(bankData);
 
@@ -127,6 +129,19 @@ public class CustomerServiceRemoteImpl extends RemoteServiceServlet implements C
     public void save(CustomerData customerData) {
         Customer customer = new Customer();
         CglibBeanCopierUtil.copyProperties(customerData, customer);
+
+        CustomerType customerType = new CustomerType();
+        CustomerTypeData customerTypeData = customerData.getCustomerTypeData();
+        if (customerTypeData != null)
+            CglibBeanCopierUtil.copyProperties(customerTypeData, customerType);
+        customer.setCustomerType(customerType);
+
+        Bank bank = new Bank();
+        BankData bankData = customerData.getBankData();
+        if (bankData != null)
+            CglibBeanCopierUtil.copyProperties(bankData, bank);
+        customer.setBank(bank);
+
         customerService.save(customer);
     }
 
@@ -183,10 +198,8 @@ public class CustomerServiceRemoteImpl extends RemoteServiceServlet implements C
     }
 
 
-
-
     private PagingLoadResult<CustomerData> getPagingLoadResult(List<CustomerData> list,
-                                                       PagingLoadConfig config) {
+                                                               PagingLoadConfig config) {
         //定义pageItems，存储Item，作为返回的数据源
         List<CustomerData> pageItems = new ArrayList<CustomerData>();
         //通过PagingLoadConfig，获得相关参数（offset）

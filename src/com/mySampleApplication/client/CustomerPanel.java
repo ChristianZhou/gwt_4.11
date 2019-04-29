@@ -5,25 +5,24 @@ import com.extjs.gxt.ui.client.Style;
 import com.extjs.gxt.ui.client.data.*;
 import com.extjs.gxt.ui.client.event.*;
 import com.extjs.gxt.ui.client.store.ListStore;
-import com.extjs.gxt.ui.client.util.ClickRepeater;
 import com.extjs.gxt.ui.client.widget.*;
 import com.extjs.gxt.ui.client.widget.button.Button;
-import com.extjs.gxt.ui.client.widget.form.FormPanel;
-import com.extjs.gxt.ui.client.widget.form.ListField;
-import com.extjs.gxt.ui.client.widget.form.TextField;
+import com.extjs.gxt.ui.client.widget.form.*;
 import com.extjs.gxt.ui.client.widget.grid.ColumnData;
 import com.extjs.gxt.ui.client.widget.grid.*;
 import com.extjs.gxt.ui.client.widget.layout.*;
 import com.extjs.gxt.ui.client.widget.toolbar.PagingToolBar;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 import com.google.gwt.user.client.Element;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.mySampleApplication.client.services.CustomerServiceRemoteAsync;
 import com.mySampleApplication.client.services.CustomerTypeServiceAsync;
-import com.mySampleApplication.client.window.CustomerWindow;
+import com.mySampleApplication.shared.model.BankData;
 import com.mySampleApplication.shared.model.CustomerData;
 import com.mySampleApplication.shared.model.CustomerTypeData;
 
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,20 +41,26 @@ public class CustomerPanel extends LayoutContainer {
     TabItem tabMain = new TabItem();
     TabItem tabItem = new TabItem();
 
-    Button btnAdd = new Button("新增");
-    Button btnBack = new Button("返回");
+    CustomerTypeServiceAsync serviceAsync = Registry.get(Constants.CUSTOMER_TYPE_SERVICE);
+
+    RpcProxy<List<CustomerTypeData>> proxy = new RpcProxy<List<CustomerTypeData>>() {
+        @Override
+        protected void load(Object loadConfig, AsyncCallback<List<CustomerTypeData>> callback) {
+            serviceAsync.list(callback);
+        }
+    };
+    ListLoader<ListLoadResult<CustomerTypeData>> loader = new BaseListLoader<>(proxy);
 
     DetailCustomerTab detailCustomer = new DetailCustomerTab();
 
     MainCustomerTab mainCustomerTab = new MainCustomerTab();
 
-
     LayoutContainer layoutContainer = new LayoutContainer();
     CardLayout cardLayout = new CardLayout();
+    final ListField<CustomerTypeData> listField = new ListField<>();
 
     public class MainCustomerTab extends LayoutContainer{
         private TextField<String> keywordTxtField = new TextField<>();
-        final ListField<BeanModel> listField = new ListField<>();
 
         public class TopPanel extends ContentPanel {
             @Override
@@ -140,13 +145,11 @@ public class CustomerPanel extends LayoutContainer {
                 });
 
 //        新增按钮
-
+                Button btnAdd = new Button("新增");
                 btnAdd.addSelectionListener(new SelectionListener<ButtonEvent>() {
                     @Override
                     public void componentSelected(ButtonEvent ce) {
-//                        tapInfo.setSelection(tabItem);
                         cardLayout.setActiveItem(detailCustomer);
-//                        createNewFeedWindow();
                     }
                 });
 
@@ -169,24 +172,6 @@ public class CustomerPanel extends LayoutContainer {
                 super.onRender(parent, pos);
 
             }
-
-            private void createNewFeedWindow() {
-                final CustomerServiceRemoteAsync customerServiceRemote =
-                        Registry.get(Constants.CUSTOMER_SERVICE);
-                customerServiceRemote.createNewCustomer(new AsyncCallback<CustomerData>() {
-                    @Override
-                    public void onFailure(Throwable caught) {
-                        Info.display("新增各户", "无法打开窗口");
-                    }
-
-                    @Override
-                    public void onSuccess(CustomerData customerData) {
-                        final Window newFeedWindow = new CustomerWindow(customerData);
-                        newFeedWindow.show();
-                    }
-                });
-            }
-
         }
 
         public class LeftPanel extends ContentPanel {
@@ -198,31 +183,16 @@ public class CustomerPanel extends LayoutContainer {
                 @Override
                 protected void onRender(Element parent, int index) {
                     super.onRender(parent, index);
-
-                    final CustomerTypeServiceAsync serviceAsync = Registry.get(Constants.CUSTOMER_TYPE_SERVICE);
-
-                    RpcProxy<List<CustomerTypeData>> proxy = new RpcProxy<List<CustomerTypeData>>() {
-                        @Override
-                        protected void load(Object loadConfig, AsyncCallback<List<CustomerTypeData>> callback) {
-                            serviceAsync.list(callback);
-                        }
-                    };
-                    BeanModelReader reader = new BeanModelReader();
-                    ListLoader<ListLoadResult<BeanModel>> loader = new BaseListLoader<>(proxy, reader);
-                    ListStore<BeanModel> feedStore = new ListStore<>(loader);
+                    ListStore<CustomerTypeData> feedStore = new ListStore<>(loader);
                     listField.setStore(feedStore);
                     listField.setDisplayField("custTypeName");
-
-                    listField.addSelectionChangedListener(new SelectionChangedListener<BeanModel>() {
+                    listField.addSelectionChangedListener(new SelectionChangedListener<CustomerTypeData>() {
                         @Override
-                        public void selectionChanged(SelectionChangedEvent<BeanModel> se) {
-                            CustomerTypeData customerTypeData = se.getSelection().get(0).getBean();
+                        public void selectionChanged(SelectionChangedEvent<CustomerTypeData> se) {
+                            CustomerTypeData customerTypeData = se.getSelection().get(0);
                             getCustomerData(customerTypeData.getCustTypeCode(), keywordTxtField.getValue());
                         }
                     });
-
-                    loader.load();
-
                     add(listField);
                 }
             }
@@ -293,17 +263,33 @@ public class CustomerPanel extends LayoutContainer {
 
     public class DetailCustomerTab extends LayoutContainer{
 
+        private final TextField<String> tfCustomerCode = new TextField<>();
+        private final TextField<String> tfCustomerName = new TextField<>();
+        private final TextField<String> tfMnemonicCode= new TextField<>();
+        private final TextField<String> tfCustomerTypeData = new TextField<>();
+        private final TextField<String> tfTel = new TextField<>();
+        private final TextField<String> tfFax = new TextField<>();
+        private final TextField<String> tfEmail = new TextField<>();
+        private final TextField<String> tfAddress = new TextField<>();
+        private final TextField<String> tfTag = new TextField<>();
+        private final ComboBox<CustomerTypeData> cbCustomerTypeData = new ComboBox<>();
         public class ButtonPanel extends ContentPanel {
             @Override
             protected void onRender(Element parent, int pos) {
                 super.onRender(parent, pos);
-                setHeaderVisible(false);
+                setHeadingText("新增客户");
                 setLayout(new ColumnLayout());
                 Button btnSave = new Button("保存");
+                btnSave.addSelectionListener(new SelectionListener<ButtonEvent>() {
+                    @Override
+                    public void componentSelected(ButtonEvent ce) {
+                        saveCustomer();
+                    }
+                });
+                Button btnBack = new Button("返回");
                 btnBack.addSelectionListener(new SelectionListener<ButtonEvent>() {
                     @Override
                     public void componentSelected(ButtonEvent ce) {
-//                        tapInfo.setSelection(tapInfo.getItem(0));
                         cardLayout.setActiveItem(mainCustomerTab);
                     }
                 });
@@ -311,14 +297,92 @@ public class CustomerPanel extends LayoutContainer {
                 add(btnBack);
             }
         }
+        public class BasicIntoPanel extends FormPanel {
+            @Override
+            protected void onRender(Element parent, int pos) {
+                super.onRender(parent, pos);
+                setHeadingText("基本信息");
+                setCollapsible(true);
+                setLayout(new ColumnLayout());
 
+                LayoutContainer left = new LayoutContainer();
+                left.setStyleAttribute("paddingRight", "10px");
+                FormLayout layout = new FormLayout();
+                layout.setLabelAlign(LabelAlign.RIGHT);
+                left.setLayout(layout);
 
+                tfCustomerCode .setFieldLabel("客户代码");
+                tfMnemonicCode.setFieldLabel("助记码");
+                tfTel .setFieldLabel("电话");
+                tfEmail .setFieldLabel("EMail");
+                tfTag .setFieldLabel("启用标记");
+                left.add(tfCustomerCode);
+                left.add(tfMnemonicCode);
+                left.add(tfTel);
+                left.add(tfEmail);
+                left.add(tfTag);
+
+                LayoutContainer right = new LayoutContainer();
+                right.setStyleAttribute("paddingLeft", "10px");
+                layout = new FormLayout();
+                layout.setLabelAlign(LabelAlign.RIGHT);
+                right.setLayout(layout);
+                tfCustomerName .setFieldLabel("客户名称");
+                tfFax .setFieldLabel("传真");
+                tfAddress .setFieldLabel("联系地址");
+                cbCustomerTypeData.setFieldLabel("客户类型");
+                cbCustomerTypeData.setDisplayField("custTypeName");
+                cbCustomerTypeData.setTriggerAction(ComboBox.TriggerAction.ALL);
+                ListStore<CustomerTypeData> listStore = new ListStore<>(loader);
+                cbCustomerTypeData.setStore(listStore);
+
+                right.add(tfCustomerName);
+                right.add(tfFax);
+                right.add(tfAddress);
+                right.add(cbCustomerTypeData);
+
+                add(left,new com.extjs.gxt.ui.client.widget.layout.ColumnData(.5));
+                add(right,new com.extjs.gxt.ui.client.widget.layout.ColumnData(.5));
+            }
+        }
+
+        public void saveCustomer() {
+            final CustomerData customerData = new CustomerData();
+            if (tfCustomerCode.getValue() != null) {
+                customerData.setCustCode(Long.parseLong(tfCustomerCode.getValue()));
+            }
+            customerData.setCustName(tfCustomerName.getValue());
+            customerData.setMnemonicCode(tfMnemonicCode.getValue());
+            customerData.setCustomerTypeData(cbCustomerTypeData.getValue());
+            customerData.setTel(tfTel.getValue());
+            customerData.setFax(tfFax.getValue());
+            customerData.setEmail(tfEmail.getValue());
+            customerData.setAddress(tfAddress.getValue());
+            if (tfTag.getValue() != null) {
+                customerData.setTag(Integer.parseInt(tfTag.getValue()));
+            }
+            final CustomerServiceRemoteAsync customerService = Registry
+                    .get(Constants.CUSTOMER_SERVICE);
+            customerService.save(customerData, new AsyncCallback<Void>() {
+                @Override
+                public void onFailure(Throwable caught) {
+                    Info.display("提示","操作失败");
+                }
+                @Override
+                public void onSuccess(Void result) {
+                    Info.display("提示","新增客户" + customerData.getCustName()+"成功");
+                    cardLayout.setActiveItem(mainCustomerTab);
+                }
+            });
+
+        }
 
         @Override
         protected void onRender(Element parent, int index) {
             super.onRender(parent, index);
             setLayout(new RowLayout());
             add(new ButtonPanel());
+            add(new BasicIntoPanel());
         }
     }
     public CustomerPanel() {
@@ -333,18 +397,18 @@ public class CustomerPanel extends LayoutContainer {
         layoutContainer.add(detailCustomer);
 
         tabMain.add(layoutContainer, new RowData(1, 1));
-//        tabMain.add(new MainCustomerTab(), new RowData(1, 1));
-
-//        tabItem.setScrollMode(Style.Scroll.NONE);
-//        tabItem.setBorders(false);
-//        tabItem.getHeader().hide();
-//        tabItem.getHeader().setBorders(false);
-//        tabItem.setLayout(new RowLayout());
-//        tabItem.add(new DetailCustomerTab(), new RowData(1, 1));
 
         tapInfo.add(tabMain);
-//        tapInfo.add(tabItem);
+
         setLayout(new FitLayout());
         add(tapInfo);
+    }
+
+    @Override
+    protected void onRender(Element parent, int index) {
+        super.onRender(parent, index);
+
+        loader.load();
+
     }
 }

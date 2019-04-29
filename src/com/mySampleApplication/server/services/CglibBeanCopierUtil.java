@@ -1,8 +1,6 @@
 package com.mySampleApplication.server.services;
 
-import com.mySampleApplication.shared.model.BankData;
 import com.mySampleApplication.shared.model.CustomerData;
-import com.mySampleApplication.shared.model.CustomerTypeData;
 import com.zgx.bootdemo.entity.Customer;
 import net.sf.cglib.beans.BeanCopier;
 import net.sf.cglib.core.Converter;
