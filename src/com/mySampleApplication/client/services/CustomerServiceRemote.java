@@ -1,5 +1,7 @@
 package com.mySampleApplication.client.services;
 
+import com.extjs.gxt.ui.client.data.PagingLoadConfig;
+import com.extjs.gxt.ui.client.data.PagingLoadResult;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
@@ -23,7 +25,8 @@ public interface CustomerServiceRemote extends RemoteService {
 
     List<CustomerData> listByType(Long custTypeCode);
 
-
+    PagingLoadResult<CustomerData> listByType(Long custTypeCode, final
+    PagingLoadConfig config);
 
 
     void save(CustomerData var1);
@@ -31,6 +34,8 @@ public interface CustomerServiceRemote extends RemoteService {
     void delete(Long var1) throws Exception;
 
     void update(CustomerData var1);
+
+    List<CustomerData> listByTypeAndKeyword(Long custTypeCode, String keyword);
 
 
     //    void list(KeywordPageData keywordPageData, AsyncCallback<List<CustomerModel>> async);

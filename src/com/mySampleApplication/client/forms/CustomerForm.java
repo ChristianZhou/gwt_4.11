@@ -1,10 +1,6 @@
 package com.mySampleApplication.client.forms;
 
 import com.extjs.gxt.ui.client.Registry;
-import com.extjs.gxt.ui.client.data.BeanModel;
-import com.extjs.gxt.ui.client.data.BeanModelFactory;
-import com.extjs.gxt.ui.client.data.BeanModelLookup;
-import com.extjs.gxt.ui.client.store.ListStore;
 import com.extjs.gxt.ui.client.widget.Info;
 import com.extjs.gxt.ui.client.widget.form.FormPanel;
 import com.extjs.gxt.ui.client.widget.form.TextArea;
@@ -18,7 +14,7 @@ import com.mySampleApplication.shared.model.CustomerData;
 /**
  * @author zhouguixing
  * @date 2019/4/26 15:20
- * @description
+ * @description     新增窗口
  */
 public class CustomerForm extends FormPanel {
     private final TextField<String> tfTitle = new TextField<>();

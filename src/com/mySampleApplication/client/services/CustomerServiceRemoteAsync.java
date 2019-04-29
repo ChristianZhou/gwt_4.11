@@ -1,5 +1,7 @@
 package com.mySampleApplication.client.services;
 
+import com.extjs.gxt.ui.client.data.PagingLoadConfig;
+import com.extjs.gxt.ui.client.data.PagingLoadResult;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.mySampleApplication.shared.model.CustomerData;
 import com.mySampleApplication.shared.model.KeywordPageData;
@@ -29,4 +31,10 @@ public interface CustomerServiceRemoteAsync {
 
 
     void listByType(Long custTypeCode, AsyncCallback<List<CustomerData>> async);
+
+    void listByTypeAndKeyword(Long custTypeCode,String keyword, AsyncCallback<List<CustomerData>> async);
+
+
+    void listByType(Long custTypeCode, final
+    PagingLoadConfig config, AsyncCallback<PagingLoadResult<CustomerData>> async);
 }

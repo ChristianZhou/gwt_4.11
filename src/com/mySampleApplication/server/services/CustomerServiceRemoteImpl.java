@@ -1,5 +1,8 @@
 package com.mySampleApplication.server.services;
 
+import com.extjs.gxt.ui.client.data.BasePagingLoadResult;
+import com.extjs.gxt.ui.client.data.PagingLoadConfig;
+import com.extjs.gxt.ui.client.data.PagingLoadResult;
 import com.google.gwt.dev.util.collect.HashMap;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.mySampleApplication.client.services.CustomerServiceRemote;
@@ -89,6 +92,37 @@ public class CustomerServiceRemoteImpl extends RemoteServiceServlet implements C
         return list1;
     }
 
+
+    @Override
+    public List<CustomerData> listByTypeAndKeyword(Long custTypeCode, String keyword) {
+        List<Customer> list = customerService.listByTypeAndKeyword(custTypeCode,keyword);
+        List<CustomerData> list1 = new ArrayList<>();
+        for (Customer customer : list) {
+            CustomerData customerData = new CustomerData();
+            CglibBeanCopierUtil.copyProperties(customer,customerData);
+
+            CustomerTypeData customerTypeData = new CustomerTypeData();
+            CustomerType customerType = customer.getCustomerType();
+            if(customerType!=null)
+            CglibBeanCopierUtil.copyProperties(customerType, customerTypeData);
+            customerData.setCustomerTypeData(customerTypeData);
+            BankData bankData = new BankData();
+            Bank bank = customer.getBank();
+            if(bank==null)bank = new Bank();
+            CglibBeanCopierUtil.copyProperties(bank, bankData);
+            customerData.setBankData(bankData);
+
+            list1.add(customerData);
+        }
+        return list1;
+    }
+
+    @Override
+    public PagingLoadResult<CustomerData> listByType(Long custTypeCode, PagingLoadConfig config) {
+        List<CustomerData> list = listByType(custTypeCode);
+        return getPagingLoadResult(list, config);
+    }
+
     @Override
     public void save(CustomerData customerData) {
         Customer customer = new Customer();
@@ -108,6 +142,7 @@ public class CustomerServiceRemoteImpl extends RemoteServiceServlet implements C
         customerService.save(customer);
     }
 
+
     @Override
     public com.mySampleApplication.shared.model.CustomerData createNewCustomer() {
         com.mySampleApplication.shared.model.CustomerData customerData = new com.mySampleApplication.shared.model.CustomerData();
@@ -119,7 +154,6 @@ public class CustomerServiceRemoteImpl extends RemoteServiceServlet implements C
     public void saveCustomer(com.mySampleApplication.shared.model.CustomerData feed) {
         Element eleRoot = new Element("rss");
         eleRoot.setAttribute(new Attribute("version", "2.0"));
-
         // Create a document from the feed object
         Document document = new Document(eleRoot);
 
@@ -146,5 +180,29 @@ public class CustomerServiceRemoteImpl extends RemoteServiceServlet implements C
         } catch (IOException e) {
             System.out.println("Error saving feed");
         }
+    }
+
+
+
+
+    private PagingLoadResult<CustomerData> getPagingLoadResult(List<CustomerData> list,
+                                                       PagingLoadConfig config) {
+        //定义pageItems，存储Item，作为返回的数据源
+        List<CustomerData> pageItems = new ArrayList<CustomerData>();
+        //通过PagingLoadConfig，获得相关参数（offset）
+        int offset = config.getOffset();
+        //获得全部数据大小
+        int limit = list.size();
+        //根据offset获得limit
+        if (config.getLimit() > 0) {
+            limit = Math.min(offset + config.getLimit(), limit);
+        }
+        //定义好边界之后，开始读取数据
+        for (int i = offset; i < limit; i++) {
+            pageItems.add(list.get(i));
+        }
+        //通过pageItems，转化成BasePagingLoadResult，同时赋值上offset和totalLength
+        return new BasePagingLoadResult<>(pageItems, offset, list.size());
+
     }
 }
