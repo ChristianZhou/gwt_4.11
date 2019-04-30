@@ -1,5 +1,7 @@
 package com.mySampleApplication.shared.model;
 
+import com.extjs.gxt.ui.client.data.BaseModelData;
+
 import java.io.Serializable;
 
 /**
@@ -7,7 +9,7 @@ import java.io.Serializable;
  * @date 2017年9月6日上午9:28:56
  * @description 银行实体类 表：BANK
  */
-public class BankData implements Serializable {
+public class BankData extends BaseModelData implements Serializable {
 
     private Long bankCode;//主键、银行代码
     private String bankName;//银行名称
@@ -15,6 +17,7 @@ public class BankData implements Serializable {
         return bankCode;
     }
     public void setBankCode(Long bankCode) {
+        set("bankCode", bankCode);
         this.bankCode = bankCode;
     }
 
@@ -23,6 +26,7 @@ public class BankData implements Serializable {
     }
 
     public void setBankName(String bankName) {
+        set("bankName", bankName);
         this.bankName = bankName;
     }
 }
