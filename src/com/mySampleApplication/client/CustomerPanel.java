@@ -41,12 +41,12 @@ public class CustomerPanel extends LayoutContainer {
     TabItem tabMain = new TabItem();
     TabItem tabItem = new TabItem();
 
-    CustomerTypeServiceAsync serviceAsync = Registry.get(Constants.CUSTOMER_TYPE_SERVICE);
-
+    CustomerTypeServiceAsync customerTypeServiceAsync = Registry.get(Constants.CUSTOMER_TYPE_SERVICE);
+    final CustomerServiceRemoteAsync customerServiceRemoteAsync = Registry.get(Constants.CUSTOMER_SERVICE);
     RpcProxy<List<CustomerTypeData>> proxy = new RpcProxy<List<CustomerTypeData>>() {
         @Override
         protected void load(Object loadConfig, AsyncCallback<List<CustomerTypeData>> callback) {
-            serviceAsync.list(callback);
+            customerTypeServiceAsync.list(callback);
         }
     };
     ListLoader<ListLoadResult<CustomerTypeData>> loader = new BaseListLoader<>(proxy);
@@ -57,9 +57,16 @@ public class CustomerPanel extends LayoutContainer {
 
     LayoutContainer layoutContainer = new LayoutContainer();
     CardLayout cardLayout = new CardLayout();
-    final ListField<CustomerTypeData> listField = new ListField<>();
+    final ListField<CustomerTypeData> customerTypeDataListField = new ListField<>();
 
     public class MainCustomerTab extends LayoutContainer{
+        final ListStore<BeanModel> custStore = Registry.get(Constants.CUSTOMER_STORE);
+        final List<ColumnConfig> columns = new ArrayList<>();
+        ColumnModel columnModel;
+
+        Grid<BeanModel> grid ;
+        Long customerType = null;
+
         private TextField<String> keywordTxtField = new TextField<>();
 
         public class TopPanel extends ContentPanel {
@@ -88,7 +95,6 @@ public class CustomerPanel extends LayoutContainer {
                 protected void onRender(Element parent, int index) {
                     super.onRender(parent, index);
                     setLayout(new FitLayout());
-                    final List<ColumnConfig> columns = new ArrayList<>();
                     columns.add(new ColumnConfig("custCode", "客户代码", 100));
                     columns.add(new ColumnConfig("custName", "客户名称", 100));
                     columns.add(new ColumnConfig("mnemonicCode", "助记码", 100));
@@ -105,13 +111,11 @@ public class CustomerPanel extends LayoutContainer {
                     columns.add(new ColumnConfig("email", "EMail", 100));
                     columns.add(new ColumnConfig("tag", "启用标记", 100));
 
-                    final ColumnModel columnModel = new ColumnModel(columns);
-                    final ListStore<BeanModel> custStore = Registry.get(Constants.CUSTOMER_STORE);
 
-                    Grid<BeanModel> grid = new Grid<>(custStore, columnModel);
+                    columnModel= new ColumnModel(columns);
+                    grid= new Grid<>(custStore, columnModel);
                     grid.setBorders(true);
-                    grid.setAutoExpandColumn("email");
-
+//                    grid.setAutoExpandColumn("email");
                     add(grid);
 
                 }
@@ -133,9 +137,8 @@ public class CustomerPanel extends LayoutContainer {
                     @Override
                     public void componentSelected(ButtonEvent ce) {
 //                    com.google.gwt.user.client.Window.alert(listField.getValue().get("custTypeCode")+"开发中");
-                        Long customerType = null;
-                        if (listField.getValue() != null) {
-                            Object customerTypeCOde = listField.getValue().get("custTypeCode");
+                        if (customerTypeDataListField.getValue() != null) {
+                            Object customerTypeCOde = customerTypeDataListField.getValue().get("custTypeCode");
                             if (customerTypeCOde != null) {
                                 customerType = Long.parseLong(customerTypeCOde.toString());
                             }
@@ -155,6 +158,31 @@ public class CustomerPanel extends LayoutContainer {
 
 //        删除按钮
                 Button btnDelete = new Button("删除");
+                btnDelete.addSelectionListener(new SelectionListener<ButtonEvent>() {
+                    @Override
+                    public void componentSelected(ButtonEvent ce) {
+//                        Window.alert("开发中");
+                        final BeanModel model = grid.getSelectionModel().getSelectedItem();
+//                        Window.alert(model.getProperties().toString());
+                        Object customerCodeObj = model.get("custCode");
+                        if (customerCodeObj != null) {
+                            Long customerCodeL = Long.valueOf(customerCodeObj.toString());
+                            customerServiceRemoteAsync.delete(customerCodeL, new AsyncCallback<Void>() {
+                                @Override
+                                public void onFailure(Throwable caught) {
+                                    Info.display("错误", "删除客户"+model.get("custName")+"失败");
+                                }
+                                @Override
+                                public void onSuccess(Void result) {
+                                    Info.display("成功", "删除客户"+model.get("custName")+"成功");
+                                    getCustomerData(customerType, keywordTxtField.getValue());
+                                }
+                            });
+                        }else {
+                            Info.display("错误", "客户主键为空");
+                        }
+                    }
+                });
 
 //        顶部按钮条
                 final ToolBar btnBar = new ToolBar();
@@ -164,7 +192,7 @@ public class CustomerPanel extends LayoutContainer {
 
                 setTopComponent(btnBar);
                 setBottomComponent(pageBar);
-                add(new CenterPanel.CustomerGrid());
+                add(new CustomerGrid());
             }
 
             @Override
@@ -184,16 +212,16 @@ public class CustomerPanel extends LayoutContainer {
                 protected void onRender(Element parent, int index) {
                     super.onRender(parent, index);
                     ListStore<CustomerTypeData> feedStore = new ListStore<>(loader);
-                    listField.setStore(feedStore);
-                    listField.setDisplayField("custTypeName");
-                    listField.addSelectionChangedListener(new SelectionChangedListener<CustomerTypeData>() {
+                    customerTypeDataListField.setStore(feedStore);
+                    customerTypeDataListField.setDisplayField("custTypeName");
+                    customerTypeDataListField.addSelectionChangedListener(new SelectionChangedListener<CustomerTypeData>() {
                         @Override
                         public void selectionChanged(SelectionChangedEvent<CustomerTypeData> se) {
                             CustomerTypeData customerTypeData = se.getSelection().get(0);
                             getCustomerData(customerTypeData.getCustTypeCode(), keywordTxtField.getValue());
                         }
                     });
-                    add(listField);
+                    add(customerTypeDataListField);
                 }
             }
 
@@ -241,8 +269,8 @@ public class CustomerPanel extends LayoutContainer {
             if (keyword == null) {
                 keyword = "";
             }
-            final CustomerServiceRemoteAsync serviceAsync = Registry.get(Constants.CUSTOMER_SERVICE);
-            serviceAsync.listByTypeAndKeyword(customerType, keyword, new AsyncCallback<List<CustomerData>>() {
+
+            customerServiceRemoteAsync.listByTypeAndKeyword(customerType, keyword, new AsyncCallback<List<CustomerData>>() {
                 @Override
                 public void onFailure(Throwable caught) {
                     Info.display("客户列表", "加载失败！");
