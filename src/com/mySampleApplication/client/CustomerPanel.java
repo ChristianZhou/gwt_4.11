@@ -2,6 +2,8 @@ package com.mySampleApplication.client;
 
 import com.extjs.gxt.ui.client.Registry;
 import com.extjs.gxt.ui.client.Style;
+import com.extjs.gxt.ui.client.binding.FieldBinding;
+import com.extjs.gxt.ui.client.binding.FormBinding;
 import com.extjs.gxt.ui.client.data.*;
 import com.extjs.gxt.ui.client.event.*;
 import com.extjs.gxt.ui.client.store.ListStore;
@@ -16,6 +18,7 @@ import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.mySampleApplication.client.model.CustomerModel;
 import com.mySampleApplication.client.services.CustomerServiceRemoteAsync;
 import com.mySampleApplication.client.services.CustomerTypeServiceAsync;
 import com.mySampleApplication.server.services.CglibBeanCopierUtil;
@@ -24,6 +27,7 @@ import com.mySampleApplication.shared.model.CustomerData;
 import com.mySampleApplication.shared.model.CustomerTypeData;
 
 import javax.validation.constraints.NotNull;
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -281,8 +285,6 @@ public class CustomerPanel extends LayoutContainer {
             add(centerPanel, centerData);
             add(topPanel, northData);
         }
-
-
     }
 
     public void getCustomerData(Long customerType, String keyword) {
@@ -307,30 +309,33 @@ public class CustomerPanel extends LayoutContainer {
         });
     }
 
-    public class DetailCustomerTab extends LayoutContainer {
+    public class DetailCustomerTab extends FormPanel {
 
-        private final TextField<String> tfCustomerCode = new TextField<>();
-        private final TextField<String> tfCustomerName = new TextField<>();
-        private final TextField<String> tfMnemonicCode = new TextField<>();
-        private final TextField<String> tfCustomerTypeData = new TextField<>();
-        private final TextField<String> tfTel = new TextField<>();
-        private final TextField<String> tfFax = new TextField<>();
-        private final TextField<String> tfEmail = new TextField<>();
-        private final TextField<String> tfAddress = new TextField<>();
-        private final TextField<String> tfTag = new TextField<>();
+        private final TextField<String> custCode = new TextField<>();
+        private final TextField<String> custName = new TextField<>();
+        private final TextField<String> mnemonicCode = new TextField<>();
+        private final TextField<String> tel = new TextField<>();
+        private final TextField<String> fax = new TextField<>();
+        private final TextField<String> email = new TextField<>();
+        private final TextField<String> address = new TextField<>();
         private final CheckBoxGroup checkGroup = new CheckBoxGroup();
-        private final CheckBox checkBoxTag = new CheckBox();
-        private final ComboBox<CustomerTypeData> cbCustomerTypeData = new ComboBox<>();
+        private final CheckBox tag = new CheckBox();
+        private final ComboBox<CustomerTypeData> customerTypeData = new ComboBox<>();
 
-        private final TextField<String> tfWorkUnit = new TextField<>();
-        private final TextField<String> tfPostcode = new TextField<>();
-        private final TextField<String> tfBankDataCode = new TextField<>();
-        private final TextField<String> tfBankAccount = new TextField<>();
-        private final TextField<String> tfSetSettlementMethodCode = new TextField<>();
-        private final DateField dfBirthDay = new DateField();
-        private final DateField dfSettlementDate = new DateField();
-        private final DateField dfMonthlySettlementDate = new DateField();
-        private final TextArea taRemark = new TextArea();
+        private final TextField<String> workUnitCode = new TextField<>();
+        private final TextField<String> postcode = new TextField<>();
+        private final TextField<String> bankData = new TextField<>();
+        private final TextField<String> bankAccount = new TextField<>();
+        private final TextField<String> setSettlementMethodCode = new TextField<>();
+        private final DateField birthday = new DateField();
+        private final DateField settlementDate = new DateField();
+        private final DateField monthlySettlementDate = new DateField();
+        private final TextArea remark = new TextArea();
+
+
+
+        CustomerData customerData = new CustomerData();
+        FormBinding binding = new FormBinding(this);
 
         public class ButtonPanel extends ContentPanel {
             @Override
@@ -372,18 +377,18 @@ public class CustomerPanel extends LayoutContainer {
                 layout.setLabelAlign(LabelAlign.RIGHT);
                 left.setLayout(layout);
 
-                tfCustomerCode.setFieldLabel("客户代码");
-                tfMnemonicCode.setFieldLabel("助记码");
-                tfTel.setFieldLabel("电话");
-                tfEmail.setFieldLabel("EMail");
+                custCode.setFieldLabel("客户代码");
+                mnemonicCode.setFieldLabel("助记码");
+                tel.setFieldLabel("电话");
+                email.setFieldLabel("EMail");
                 checkGroup.setFieldLabel("启用标记");
-                checkBoxTag.setBoxLabel("启用");
-                checkGroup.add(checkBoxTag);
+                tag.setBoxLabel("启用");
+                checkGroup.add(tag);
 
-                left.add(tfCustomerCode);
-                left.add(tfMnemonicCode);
-                left.add(tfTel);
-                left.add(tfEmail);
+                left.add(custCode);
+                left.add(mnemonicCode);
+                left.add(tel);
+                left.add(email);
                 left.add(checkGroup);
 
                 LayoutContainer right = new LayoutContainer();
@@ -391,18 +396,18 @@ public class CustomerPanel extends LayoutContainer {
                 layout = new FormLayout();
                 layout.setLabelAlign(LabelAlign.RIGHT);
                 right.setLayout(layout);
-                tfCustomerName.setFieldLabel("客户名称");
-                tfFax.setFieldLabel("传真");
-                tfAddress.setFieldLabel("联系地址");
-                cbCustomerTypeData.setFieldLabel("客户类型");
-                cbCustomerTypeData.setDisplayField("custTypeName");
+                custName.setFieldLabel("客户名称");
+                fax.setFieldLabel("传真");
+                address.setFieldLabel("联系地址");
+                customerTypeData.setFieldLabel("客户类型");
+                customerTypeData.setDisplayField("custTypeName");
 //                cbCustomerTypeData.setTriggerAction(ComboBox.TriggerAction.ALL);
-                cbCustomerTypeData.setStore(customerTypeDataListStore);
+                customerTypeData.setStore(customerTypeDataListStore);
 
-                right.add(tfCustomerName);
-                right.add(tfFax);
-                right.add(tfAddress);
-                right.add(cbCustomerTypeData);
+                right.add(custName);
+                right.add(fax);
+                right.add(address);
+                right.add(customerTypeData);
 
                 add(left, new com.extjs.gxt.ui.client.widget.layout.ColumnData(.5));
                 add(right, new com.extjs.gxt.ui.client.widget.layout.ColumnData(.5));
@@ -424,17 +429,17 @@ public class CustomerPanel extends LayoutContainer {
                 layout.setLabelAlign(LabelAlign.RIGHT);
                 left.setLayout(layout);
 
-                tfWorkUnit.setFieldLabel("工作单位");
-                tfPostcode.setFieldLabel("邮编");
-                tfBankDataCode.setFieldLabel("银行");
-                dfSettlementDate.setFieldLabel("结账日期");
-                taRemark.setFieldLabel("备注");
+                workUnitCode.setFieldLabel("工作单位");
+                postcode.setFieldLabel("邮编");
+                bankData.setFieldLabel("银行");
+                settlementDate.setFieldLabel("结账日期");
+                remark.setFieldLabel("备注");
 
-                left.add(tfWorkUnit);
-                left.add(tfPostcode);
-                left.add(tfBankDataCode);
-                left.add(dfSettlementDate);
-                left.add(taRemark);
+                left.add(workUnitCode);
+                left.add(postcode);
+                left.add(bankData);
+                left.add(settlementDate);
+                left.add(remark);
 
                 LayoutContainer right = new LayoutContainer();
                 right.setStyleAttribute("paddingLeft", "10px");
@@ -442,15 +447,15 @@ public class CustomerPanel extends LayoutContainer {
                 layout.setLabelAlign(LabelAlign.RIGHT);
                 right.setLayout(layout);
 
-                dfBirthDay.setFieldLabel("生日");
-                tfBankAccount.setFieldLabel("银行账号");
-                tfSetSettlementMethodCode.setFieldLabel("结算方式");
-                dfMonthlySettlementDate.setFieldLabel("月结日期");
+                birthday.setFieldLabel("生日");
+                bankAccount.setFieldLabel("银行账号");
+                setSettlementMethodCode.setFieldLabel("结算方式");
+                monthlySettlementDate.setFieldLabel("月结日期");
 
-                right.add(dfBirthDay);
-                right.add(tfBankAccount);
-                right.add(tfSetSettlementMethodCode);
-                right.add(dfMonthlySettlementDate);
+                right.add(birthday);
+                right.add(bankAccount);
+                right.add(setSettlementMethodCode);
+                right.add(monthlySettlementDate);
 
                 add(left, new com.extjs.gxt.ui.client.widget.layout.ColumnData(.5));
                 add(right, new com.extjs.gxt.ui.client.widget.layout.ColumnData(.5));
@@ -458,18 +463,19 @@ public class CustomerPanel extends LayoutContainer {
         }
 
         public void saveCustomer() {
-            final CustomerData customerData = new CustomerData();
-            if (tfCustomerCode.getValue() != null) {
-                customerData.setCustCode(Long.parseLong(tfCustomerCode.getValue()));
-            }
-            customerData.setCustName(tfCustomerName.getValue());
-            customerData.setMnemonicCode(tfMnemonicCode.getValue());
-            customerData.setCustomerTypeData(cbCustomerTypeData.getValue());
-            customerData.setTel(tfTel.getValue());
-            customerData.setFax(tfFax.getValue());
-            customerData.setEmail(tfEmail.getValue());
-            customerData.setAddress(tfAddress.getValue());
-                customerData.setTag(checkBoxTag.getValue()?1:0);
+//            if (tfCustomerCode.getValue() != null) {
+//                customerData.setCustCode(Long.parseLong(tfCustomerCode.getValue()));
+//            }
+//            customerModel.setCustName(tfCustomerName.getValue());
+//            customerModel.setMnemonicCode(tfMnemonicCode.getValue());
+//            customerData.setCustomerTypeData(cbCustomerTypeData.getValue());
+//            customerModel.setTel(tfTel.getValue());
+//            customerModel.setFax(tfFax.getValue());
+//            customerModel.setEmail(tfEmail.getValue());
+//            customerModel.setAddress(tfAddress.getValue());
+//            customerModel.setTag(checkBoxTag.getValue()?1:0);
+//            customerModel.setBirthday(new Date(dfBirthDay.getValue().getTime()));
+//            Window.alert(customerData.getProperties().toString());
             final CustomerServiceRemoteAsync customerService = Registry
                     .get(Constants.CUSTOMER_SERVICE);
             customerService.save(customerData, new AsyncCallback<Void>() {
@@ -487,7 +493,7 @@ public class CustomerPanel extends LayoutContainer {
                         }
                     }
                     getCustomerData(customerType, keywordTxtField.getValue());
-                    Info.display("提示", "新增客户" + customerData.getCustName() + "成功");
+                    Info.display("提示", "新增客户" + customerData.get("custName") + "成功");
                     cardLayout.setActiveItem(mainCustomerTab);
                 }
             });
@@ -501,6 +507,22 @@ public class CustomerPanel extends LayoutContainer {
             add(new ButtonPanel());
             add(new BasicInfoPanel());
             add(new DetailInfoPanel());
+
+
+//            StringBuilder stringBuilder = new StringBuilder();
+//            for (Field<?> field : this.getFields()) {
+//                stringBuilder.append(field.getId() + field.getName() + field.getValue()+"\n");
+//            }
+//            Window.alert(stringBuilder.toString());
+            binding.addFieldBinding(new FieldBinding(custName, "custName"));
+            binding.addFieldBinding(new FieldBinding(customerTypeData, "customerTypeData"));
+
+            binding.autoBind();
+
+
+            binding.bind(customerData);
+
+
         }
     }
 
