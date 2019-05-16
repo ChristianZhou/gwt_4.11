@@ -6,6 +6,10 @@
     <inherits name='com.google.gwt.user.theme.standard.Standard' />
     <inherits name='com.extjs.gxt.charts.Chart' />
 
+    <set-property name="user.agent" value="gecko1_8" />
+    <extend-property name="locale" values="en" />
+    <extend-property name="locale" values="zh" />
+    <set-property-fallback name="locale" value="zh" />
     <!-- Specify the app entry point class.                   -->
     <entry-point class='com.mySampleApplication.client.MySampleApplication'/>
 

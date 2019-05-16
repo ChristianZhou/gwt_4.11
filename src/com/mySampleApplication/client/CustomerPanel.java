@@ -7,25 +7,35 @@ import com.extjs.gxt.ui.client.binding.FormBinding;
 import com.extjs.gxt.ui.client.data.*;
 import com.extjs.gxt.ui.client.event.*;
 import com.extjs.gxt.ui.client.store.ListStore;
+import com.extjs.gxt.ui.client.util.Margins;
+import com.extjs.gxt.ui.client.util.Padding;
 import com.extjs.gxt.ui.client.widget.*;
 import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.form.*;
 import com.extjs.gxt.ui.client.widget.grid.ColumnData;
 import com.extjs.gxt.ui.client.widget.grid.*;
 import com.extjs.gxt.ui.client.widget.layout.*;
+import com.extjs.gxt.ui.client.widget.menu.Menu;
+import com.extjs.gxt.ui.client.widget.menu.MenuItem;
 import com.extjs.gxt.ui.client.widget.toolbar.PagingToolBar;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
+import com.extjs.gxt.ui.client.widget.treepanel.TreePanel;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.mySampleApplication.client.model.CustomerModel;
 import com.mySampleApplication.client.services.CustomerServiceRemoteAsync;
 import com.mySampleApplication.client.services.CustomerTypeServiceAsync;
+import com.mySampleApplication.client.util.GWTUtil;
 import com.mySampleApplication.server.services.CglibBeanCopierUtil;
 import com.mySampleApplication.shared.model.BankData;
 import com.mySampleApplication.shared.model.CustomerData;
 import com.mySampleApplication.shared.model.CustomerTypeData;
+import org.apache.tools.ant.taskdefs.rmic.WLRmic;
 
+import javax.swing.border.Border;
 import javax.validation.constraints.NotNull;
 import java.sql.Date;
 import java.util.ArrayList;
@@ -40,12 +50,15 @@ import java.util.List;
 public class CustomerPanel extends LayoutContainer {
 
     private TabPanel tapInfo = new TabPanel();
+    private Button btnRefresh;
 
+    private TreePanel<CustomerTypeData> trPanelCategory;
     private FormPanel fPanelDetail;
 
     TabItem tabMain = new TabItem();
     TabItem tabItem = new TabItem();
 
+    private PagingLoader<PagingLoadResult<CustomerData>> loaderProduct;
 
     CustomerTypeServiceAsync customerTypeServiceAsync = Registry.get(Constants.CUSTOMER_TYPE_SERVICE);
     final CustomerServiceRemoteAsync customerServiceRemoteAsync = Registry.get(Constants.CUSTOMER_SERVICE);
@@ -68,83 +81,82 @@ public class CustomerPanel extends LayoutContainer {
     final ListField<CustomerTypeData> customerTypeDataListField = new ListField<>();
     Long customerType = null;
     private TextField<String> keywordTxtField = new TextField<>();
+    private SimpleComboBox<String> sbbEnable;
 
     public class MainCustomerTab extends LayoutContainer {
         final ListStore<BeanModel> custStore = Registry.get(Constants.CUSTOMER_STORE);
-        final List<ColumnConfig> columns = new ArrayList<>();
+        private ListStore<CustomerData> storeProduct;
+
+
         ColumnModel columnModel;
 
         Grid<BeanModel> grid;
+
+        Grid<CustomerData> newGrid;
 
 
         public class TopPanel extends ContentPanel {
             @Override
             protected void onRender(Element parent, int pos) {
                 super.onRender(parent, pos);
-                FormPanel formPanel = new FormPanel();
-                FormLayout layout = new FormLayout();
-                formPanel.setHeaderVisible(false);
-                setHeadingText("查询条件");
-                layout.setLabelWidth(150);
-                layout.setLabelAlign(FormPanel.LabelAlign.RIGHT);
-                layout.setLabelPad(20);
-                formPanel.setLayout(layout);
+                setLayout(new ColumnLayout());
+                setHeadingHtml("查询条件");
+                setBorders(false);
+                setBodyBorder(false);
+                getHeader().setBorders(false);
+
+                class TMPLayoutContainer extends LayoutContainer {
+                    public TMPLayoutContainer(int labelWidth, int defaultWidth) {
+                        super();
+                        setStyleAttribute("paddingLeft", "10px");
+                        setStyleAttribute("paddingTop", "10px");
+                        FormLayout formLayout = new FormLayout();
+                        formLayout.setLabelWidth(labelWidth);
+                        formLayout.setDefaultWidth(defaultWidth);
+                        formLayout.setLabelAlign(FormPanel.LabelAlign.RIGHT);
+                        setLayout(formLayout);
+                    }
+                }
+
+                LayoutContainer lcnLeft = new TMPLayoutContainer(180, 150);
                 keywordTxtField.setName("keyword");
                 keywordTxtField.setFieldLabel("输入代码、助记符、名称");
-                keywordTxtField.setWidth(200);
-                formPanel.add(keywordTxtField);
-                add(formPanel);
+                lcnLeft.add(keywordTxtField, new FormData());
+
+                LayoutContainer lcnCenter = new TMPLayoutContainer(100, 120);
+                sbbEnable = new SimpleComboBox<String>();
+                sbbEnable.setFieldLabel("启用标记");
+                sbbEnable.setTriggerAction(ComboBox.TriggerAction.ALL);
+                sbbEnable.add("启用");
+                sbbEnable.add("不启用");
+                sbbEnable.setSimpleValue("启用");
+                lcnCenter.add(sbbEnable, new FormData());
+
+                add(lcnLeft, new com.extjs.gxt.ui.client.widget.layout.ColumnData(350));
+                add(lcnCenter, new com.extjs.gxt.ui.client.widget.layout.ColumnData(240));
             }
         }
 
         public class CenterPanel extends ContentPanel {
-            public class CustomerGrid extends LayoutContainer {
-                @Override
-                protected void onRender(Element parent, int index) {
-                    super.onRender(parent, index);
-                    setLayout(new FitLayout());
-                    columns.add(new ColumnConfig("custCode", "客户代码", 100));
-                    columns.add(new ColumnConfig("custName", "客户名称", 100));
-                    columns.add(new ColumnConfig("mnemonicCode", "助记码", 100));
-                    ColumnConfig e = new ColumnConfig("customerTypeData", "客户类型", 100);
-                    e.setRenderer(new GridCellRenderer() {
-                        @Override
-                        public Object render(ModelData model, String property, ColumnData config, int rowIndex, int colIndex, ListStore store, Grid grid) {
-                            return ((ModelData) model.get(property)).get("custTypeName");
-                        }
-                    });
-                    columns.add(e);
-                    columns.add(new ColumnConfig("tel", "电话", 100));
-                    columns.add(new ColumnConfig("fax", "传真", 100));
-                    columns.add(new ColumnConfig("email", "EMail", 100));
-                    columns.add(new ColumnConfig("tag", "启用标记", 100));
-
-
-                    columnModel = new ColumnModel(columns);
-                    grid = new Grid<>(custStore, columnModel);
-                    grid.setBorders(true);
-//                    grid.setAutoExpandColumn("email");
-                    add(grid);
-
-                }
-            }
 
             public CenterPanel() {
-//        刘海不可见
+
+
+
                 setHeaderVisible(false);
-
-//        布局
-                setLayout(new FitLayout());
-
-//        底部分页条
-                final PagingToolBar pageBar = new PagingToolBar(5);
+                setLayout(new BorderLayout());
+                class TMPButton extends Button{
+                    public TMPButton(String html, int width) {
+                        setHtml(html);
+                        setWidth(width);
+                    }
+                }
 
 //       刷新按钮
-                Button btnRefresh = new Button("刷新");
+                btnRefresh = new TMPButton("刷新",75);
                 btnRefresh.addSelectionListener(new SelectionListener<ButtonEvent>() {
                     @Override
                     public void componentSelected(ButtonEvent ce) {
-//                    com.google.gwt.user.client.Window.alert(listField.getValue().get("custTypeCode")+"开发中");
                         if (customerTypeDataListField.getValue() != null) {
                             Long customerTypeCOde = customerTypeDataListField.getValue().getCustTypeCode();
                             if (customerTypeCOde != null) {
@@ -156,7 +168,7 @@ public class CustomerPanel extends LayoutContainer {
                 });
 
 //        新增按钮
-                Button btnAdd = new Button("新增");
+                Button btnAdd = new TMPButton("新增",75);
                 btnAdd.addSelectionListener(new SelectionListener<ButtonEvent>() {
                     @Override
                     public void componentSelected(ButtonEvent ce) {
@@ -165,13 +177,11 @@ public class CustomerPanel extends LayoutContainer {
                 });
 
 //        删除按钮
-                Button btnDelete = new Button("删除");
+                Button btnDelete = new TMPButton("删除",75);
                 btnDelete.addSelectionListener(new SelectionListener<ButtonEvent>() {
                     @Override
                     public void componentSelected(ButtonEvent ce) {
-//                        Window.alert("开发中");
                         final BeanModel model = grid.getSelectionModel().getSelectedItem();
-//                        Window.alert(model.getProperties().toString());
                         if (model != null) {
                             Object customerCodeObj = model.get("custCode");
                             if (customerCodeObj != null) {
@@ -201,17 +211,158 @@ public class CustomerPanel extends LayoutContainer {
                     }
                 });
 
+                Button btnMore = new TMPButton("更多功能",75);
+
+                Menu menuMore = new Menu();
+                btnMore.setMenu(menuMore);
+
+                MenuItem menuExport = new MenuItem("导出");
+                menuMore.add(menuExport);
+                menuExport.addSelectionListener(new SelectionListener<MenuEvent>() {
+                    @Override
+                    public void componentSelected(MenuEvent ce) {
+                        Window.alert("开发中");
+                    }
+                });
+
+                MenuItem menuImport = new MenuItem("导入");
+                menuMore.add(menuImport);
+                menuImport.addSelectionListener(new SelectionListener<MenuEvent>() {
+                    @Override
+                    public void componentSelected(MenuEvent ce) {
+                        Window.alert("开发中");
+                    }
+                });
+
+                MenuItem menuBatch = new MenuItem("批量修改属性");
+                menuMore.add(menuBatch);
+                menuBatch.addSelectionListener(new SelectionListener<MenuEvent>() {
+
+                    @Override
+                    public void componentSelected(MenuEvent ce) {
+                        Window.alert("开发中");
+                    }
+                });
+
+
 //        顶部按钮条
-                final ToolBar btnBar = new ToolBar();
-                btnBar.add(btnRefresh);
-                btnBar.add(btnAdd);
-                btnBar.add(btnDelete);
+                LayoutContainer lcnButton = new LayoutContainer();
+                HBoxLayout hBoxLayout = new HBoxLayout();
+                hBoxLayout.setPadding(new Padding(3));
+                hBoxLayout.setHBoxLayoutAlign(HBoxLayout.HBoxLayoutAlign.TOP);
+                lcnButton.setLayout(hBoxLayout);
+                HBoxLayoutData hBoxLayoutData = new HBoxLayoutData(new Margins(0, 5, 0, 0));
+                lcnButton.add(btnRefresh,hBoxLayoutData);
+                lcnButton.add(btnAdd,hBoxLayoutData);
+                lcnButton.add(btnDelete,hBoxLayoutData);
+                lcnButton.add(btnMore,hBoxLayoutData);
 
-                setTopComponent(btnBar);
-                setBottomComponent(pageBar);
-                add(new CustomerGrid());
+                add(lcnButton,new BorderLayoutData(Style.LayoutRegion.NORTH,28));
+
+                class CustomerGrid extends LayoutContainer {
+
+                    @Override
+                    protected void onRender(Element parent, int index) {
+                        super.onRender(parent, index);
+                        setLayout(new BorderLayout());
+
+                        final List columns = new ArrayList();
+
+                        columns.add(new ColumnConfig("custCode", "客户代码", 100));
+                        columns.add(new ColumnConfig("custName", "客户名称", 100));
+                        columns.add(new ColumnConfig("mnemonicCode", "助记码", 100));
+                        ColumnConfig e = new ColumnConfig("customerTypeData", "客户类型", 100);
+                        e.setRenderer(new GridCellRenderer() {
+                            @Override
+                            public Object render(ModelData model, String property, ColumnData config, int rowIndex, int colIndex, ListStore store, Grid grid) {
+                                return ((ModelData) model.get(property)).get("custTypeName");
+                            }
+                        });
+                        columns.add(e);
+                        columns.add(new ColumnConfig("tel", "电话", 100));
+                        columns.add(new ColumnConfig("fax", "传真", 100));
+                        columns.add(new ColumnConfig("email", "EMail", 100));
+                        columns.add(new ColumnConfig("tag", "启用标记", 100));
+
+                        class NoPageGrid extends LayoutContainer{
+                            @Override
+                            protected void onRender(Element parent, int index) {
+                                super.onRender(parent, index);
+                                NoPageGrid.this.setLayout(new FitLayout());
+                                columnModel = new ColumnModel(columns);
+                                grid = new Grid<>(custStore, columnModel);
+                                grid.setBorders(true);
+                                add(grid);
+                            }
+                        }
+                        class YesPageGrid extends ContentPanel{
+                            public YesPageGrid() {
+                                RpcProxy<PagingLoadResult<CustomerData>> newProxy = new RpcProxy<PagingLoadResult<CustomerData>>() {
+                                    @Override
+                                    protected void load(Object loadConfig,
+                                                        AsyncCallback<PagingLoadResult<CustomerData>> callback) {
+                                        customerServiceRemoteAsync.findProducts(customerType,keywordTxtField.getValue(),(PagingLoadConfig)loadConfig,callback);
+                                    }
+                                };
+
+                                loaderProduct = new BasePagingLoader<PagingLoadResult<CustomerData>>(newProxy);
+                                loaderProduct.setRemoteSort(true);
+
+                                storeProduct = new ListStore<CustomerData>(loaderProduct);
+
+                                List columns1 = new ArrayList();
+
+                                columns1.add(new ColumnConfig("custCode", "客户代码", 100));
+                                columns1.add(new ColumnConfig("custName", "客户名称", 100));
+                                columns1.add(new ColumnConfig("mnemonicCode", "助记码", 100));
+                                ColumnConfig e1 = new ColumnConfig("customerTypeData", "客户类型", 100);
+                                e1.setRenderer(new GridCellRenderer() {
+                                    @Override
+                                    public Object render(ModelData model, String property, ColumnData config, int rowIndex, int colIndex, ListStore store, Grid grid) {
+                                        return ((ModelData) model.get(property)).get("custTypeName");
+                                    }
+                                });
+                                columns1.add(e1);
+                                columns1.add(new ColumnConfig("tel", "电话", 100));
+                                columns1.add(new ColumnConfig("fax", "传真", 100));
+                                columns1.add(new ColumnConfig("email", "EMail", 100));
+                                columns1.add(new ColumnConfig("tag", "启用标记", 100));
+                                columnModel = new ColumnModel(columns1);
+                                newGrid = new Grid<CustomerData>(storeProduct, columnModel);
+                                newGrid.setBorders(false);
+                                newGrid.setStripeRows(true);
+                                newGrid.setLoadMask(true);
+                                PagingToolBar pageBar = new PagingToolBar(5);
+                                pageBar.bind(loaderProduct);
+//                Loader加监听
+                                loaderProduct.addLoadListener(GWTUtil.getLoadListener(btnRefresh, pageBar, newGrid));
+                                loaderProduct.load(0, 5);
+                                setBottomComponent(pageBar);
+                                add(newGrid,new BorderLayoutData(Style.LayoutRegion.CENTER));
+                            }
+
+                            @Override
+                            protected void onRender(Element parent, int pos) {
+                                super.onRender(parent, pos);
+                                YesPageGrid.this.setLayout(new BorderLayout());
+//                                setBottomComponent(new Button("asasd"));
+                            }
+                        }
+
+                        add(new NoPageGrid(),new BorderLayoutData(Style.LayoutRegion.NORTH));
+
+                        YesPageGrid yes = new YesPageGrid();
+
+                        add(yes,new BorderLayoutData(Style.LayoutRegion.CENTER));
+
+
+
+                    }
+                }
+
+                CustomerGrid widget = new CustomerGrid();
+                add(widget,new BorderLayoutData(Style.LayoutRegion.CENTER));
             }
-
             @Override
             protected void onRender(Element parent, int pos) {
                 super.onRender(parent, pos);
@@ -222,7 +373,7 @@ public class CustomerPanel extends LayoutContainer {
         public class LeftPanel extends ContentPanel {
             public class CustomerTypeList extends LayoutContainer {
                 public CustomerTypeList() {
-                    setLayout(new FitLayout());
+                    setLayout(new BorderLayout());
                 }
 
                 @Override
@@ -237,7 +388,7 @@ public class CustomerPanel extends LayoutContainer {
                             if (selectedItem != null) {
                                 Long custTypeCode = selectedItem.getCustTypeCode();
                                 getCustomerData(custTypeCode, keywordTxtField.getValue());
-                            }else {
+                            } else {
                                 getCustomerData(null, keywordTxtField.getValue());
                             }
                         }
@@ -247,15 +398,65 @@ public class CustomerPanel extends LayoutContainer {
             }
 
             public LeftPanel() {
+                LayoutContainer lcnTreeBtn = new LayoutContainer();
+                lcnTreeBtn.setStyleAttribute("backgroundColor", "white");
+                HBoxLayout itemLayout = new HBoxLayout();
+                itemLayout.setPadding(new Padding(3));
+                itemLayout.setHBoxLayoutAlign(HBoxLayout.HBoxLayoutAlign.TOP);
+                lcnTreeBtn.setLayout(itemLayout);
+                Button btnTreeAdd = new Button("新增");
+                btnTreeAdd.setWidth(55);
+                btnTreeAdd.addSelectionListener(new SelectionListener<ButtonEvent>() {
 
-//        Fit布局
-                setLayout(new FitLayout());
+                    @Override
+                    public void componentSelected(ButtonEvent ce) {
+                        Window.alert("新增类别开发中");
+                    }
+                });
+
+                Button btnTreeEdit = new Button("修改");
+                btnTreeEdit.setWidth(55);
+                btnTreeEdit.addSelectionListener(new SelectionListener<ButtonEvent>() {
+
+                    @Override
+                    public void componentSelected(ButtonEvent ce) {
+                        Window.alert("修改类别，开发中");
+                    }
+                });
+
+                Button btnTreeRemove = new Button("删除");
+                btnTreeRemove.setWidth(55);
+                btnTreeRemove.addSelectionListener(new SelectionListener<ButtonEvent>() {
+
+                    @Override
+                    public void componentSelected(ButtonEvent ce) {
+                        Window.alert("删除类别，开发中");
+                    }
+                });
+                lcnTreeBtn.add(btnTreeAdd, new HBoxLayoutData(new Margins(0, 5, 0,
+                        0)));
+                lcnTreeBtn.add(btnTreeEdit, new HBoxLayoutData(new Margins(0, 5, 0,
+                        0)));
+                lcnTreeBtn.add(btnTreeRemove, new HBoxLayoutData(new Margins(0, 5, 0,
+                        0)));
+
+                setCollapsible(false);
+                setAnimCollapse(false);
+                setLayout(new BorderLayout());
 
 //        标题栏
-                setHeadingText("客户类型");
+                setHeadingHtml("客户类型");
+                setBorders(false);
+                setBodyBorder(false);
+                getHeader().setBorders(false);
+
+                add(lcnTreeBtn, new BorderLayoutData(Style.LayoutRegion.NORTH, 28));
+//
+//                trPanelCategory.fireEvent(Events.SelectionChange);
+//                add(trPanelCategory, new BorderLayoutData(Style.LayoutRegion.CENTER));
 
 //        显示内容
-                add(new LeftPanel.CustomerTypeList());
+                add(new LeftPanel.CustomerTypeList(), new BorderLayoutData(Style.LayoutRegion.CENTER));
             }
         }
 
@@ -305,6 +506,8 @@ public class CustomerPanel extends LayoutContainer {
                     BeanModelFactory beanModelFactory = BeanModelLookup.get().getFactory(customerData.getClass());
                     custStore.add(beanModelFactory.createModel(customerData));
                 }
+
+                loaderProduct.load(0, 5);
             }
         });
     }
@@ -331,7 +534,6 @@ public class CustomerPanel extends LayoutContainer {
         private final DateField settlementDate = new DateField();
         private final DateField monthlySettlementDate = new DateField();
         private final TextArea remark = new TextArea();
-
 
 
         CustomerData customerData = new CustomerData();
@@ -384,6 +586,7 @@ public class CustomerPanel extends LayoutContainer {
                 checkGroup.setFieldLabel("启用标记");
                 tag.setBoxLabel("启用");
                 checkGroup.add(tag);
+
 
                 left.add(custCode);
                 left.add(mnemonicCode);
@@ -507,13 +710,6 @@ public class CustomerPanel extends LayoutContainer {
             add(new ButtonPanel());
             add(new BasicInfoPanel());
             add(new DetailInfoPanel());
-
-
-//            StringBuilder stringBuilder = new StringBuilder();
-//            for (Field<?> field : this.getFields()) {
-//                stringBuilder.append(field.getId() + field.getName() + field.getValue()+"\n");
-//            }
-//            Window.alert(stringBuilder.toString());
             binding.addFieldBinding(new FieldBinding(custName, "custName"));
             binding.addFieldBinding(new FieldBinding(customerTypeData, "customerTypeData"));
 

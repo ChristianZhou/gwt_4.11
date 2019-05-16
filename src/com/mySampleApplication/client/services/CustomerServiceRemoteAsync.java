@@ -37,4 +37,9 @@ public interface CustomerServiceRemoteAsync {
 
     void listByType(Long custTypeCode, final
     PagingLoadConfig config, AsyncCallback<PagingLoadResult<CustomerData>> async);
+
+
+
+    void findProducts(Long custTypeCode, String keyword,PagingLoadConfig loadConfig,
+                      AsyncCallback<PagingLoadResult<CustomerData>> callback);
 }

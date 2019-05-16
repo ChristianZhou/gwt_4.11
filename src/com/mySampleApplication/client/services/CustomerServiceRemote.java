@@ -37,6 +37,7 @@ public interface CustomerServiceRemote extends RemoteService {
 
     List<CustomerData> listByTypeAndKeyword(Long custTypeCode, String keyword);
 
+    PagingLoadResult<CustomerData> findProducts(Long custTypeCode, String keyword, PagingLoadConfig loadConfig);
 
     //    void list(KeywordPageData keywordPageData, AsyncCallback<List<CustomerModel>> async);
     //

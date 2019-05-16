@@ -14,4 +14,5 @@ import java.io.Serializable;
  */
 @BEAN(CustomerData.class)
 public class CustomerModel  implements BeanModelMarker{
+  //hahaha
 }

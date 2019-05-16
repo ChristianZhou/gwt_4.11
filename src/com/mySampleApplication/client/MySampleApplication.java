@@ -3,11 +3,13 @@ package com.mySampleApplication.client;
 
 import com.extjs.gxt.ui.client.GXT;
 import com.extjs.gxt.ui.client.Registry;
+import com.extjs.gxt.ui.client.Style;
 import com.extjs.gxt.ui.client.data.BeanModel;
 import com.extjs.gxt.ui.client.store.ListStore;
 import com.extjs.gxt.ui.client.util.Theme;
 import com.extjs.gxt.ui.client.widget.Viewport;
-import com.extjs.gxt.ui.client.widget.layout.FitLayout;
+import com.extjs.gxt.ui.client.widget.layout.BorderLayout;
+import com.extjs.gxt.ui.client.widget.layout.BorderLayoutData;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.ui.RootPanel;
@@ -28,9 +30,9 @@ public class MySampleApplication implements EntryPoint {
                 GWT.create(CustomerTypeService.class));
 
         Viewport viewport = new Viewport();
-        viewport.setLayout(new FitLayout());
+        viewport.setLayout(new BorderLayout());
 
-        viewport.add(new CustomerPanel());
+        viewport.add(new CustomerPanel(),new BorderLayoutData(Style.LayoutRegion.CENTER));
 //        渲染
         RootPanel.get().add(viewport);
     }

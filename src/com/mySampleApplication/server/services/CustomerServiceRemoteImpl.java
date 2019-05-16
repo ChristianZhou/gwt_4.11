@@ -6,6 +6,7 @@ import com.extjs.gxt.ui.client.data.PagingLoadResult;
 import com.google.gwt.dev.util.collect.HashMap;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.mySampleApplication.client.services.CustomerServiceRemote;
+import com.mySampleApplication.server.comparator.ComparatorBaseModelData;
 import com.mySampleApplication.shared.model.*;
 import com.zgx.bootdemo.entity.*;
 import com.zgx.bootdemo.service.CustomerSerivce;
@@ -17,6 +18,7 @@ import org.jdom.output.XMLOutputter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -117,6 +119,57 @@ public class CustomerServiceRemoteImpl extends RemoteServiceServlet implements C
             list1.add(customerData);
         }
         return list1;
+    }
+
+
+    @Override
+    public PagingLoadResult<CustomerData> findProducts(Long custTypeCode, String keyword, PagingLoadConfig loadConfig) {
+        if (keyword == null) {
+            keyword = "";
+        }
+        List<Customer> list = customerService.listByTypeAndKeyword(custTypeCode, keyword);
+        List<CustomerData> list1 = new ArrayList<>();
+        for (Customer customer : list) {
+            CustomerData customerData = new CustomerData();
+            CglibBeanCopierUtil.copyProperties(customer, customerData);
+
+            CustomerTypeData customerTypeData = new CustomerTypeData();
+            CustomerType customerType = customer.getCustomerType();
+            if (customerType != null)
+                CglibBeanCopierUtil.copyProperties(customerType, customerTypeData);
+            customerData.setCustomerTypeData(customerTypeData);
+            BankData bankData = new BankData();
+            Bank bank = customer.getBank();
+            if (bank == null) bank = new Bank();
+            CglibBeanCopierUtil.copyProperties(bank, bankData);
+            customerData.setBankData(bankData);
+
+            list1.add(customerData);
+        }
+
+        //loadConfig提取参数
+        int offset = loadConfig.getOffset();
+        int limit = loadConfig.getLimit();
+        String sortField = loadConfig.getSortField();
+        String sortType = loadConfig.getSortDir().name();
+        String uuid = loadConfig.get("uuid");
+        List<CustomerData> returnList = new ArrayList<CustomerData>();
+        if (sortField == null) {
+            sortField = "productReference";
+            sortType = "ASC";
+        }
+        ComparatorBaseModelData comparator = new ComparatorBaseModelData(sortField, sortType);
+        Collections.sort(list1, comparator);
+
+        int count = list1.size();
+        for (int i = offset; i < offset + limit; i++) {
+            if (i >= count) {
+                break;
+            }
+            CustomerData data = list1.get(i);
+            returnList.add(data);
+        }
+        return new BasePagingLoadResult<CustomerData>(returnList, offset, count);
     }
 
     @Override
